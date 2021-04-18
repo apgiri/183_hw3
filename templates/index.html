@@ -24,10 +24,14 @@
          <td>[[=row.habitat]]</td>
          <td>[[=row.bird_count]]</td>
          <td>
-            # URL('edit', 'x', '1') ---> app/edit/x/1
-            <a class = "button" href = "[[=URL('edit', row.id)]]">
-               <span class = "icon>"<i class = "fa fa-fw fa-pencil"></i></span>
+            <a class = "button is-info" href = "[[=URL('edit', row.id)]]">
+               <span class = "icon"><i class = "fa fa-fw fa-pencil"></i></span>
                <span>Edit</span>
+            </a>
+         </td>
+         <td>
+            <a class = "button is-primary" href = "[[=URL('inc', row.id, signer = url_signer)]]">
+               <span class = "icon"><i class = "fa fa-fw fa-arrow-up"></i></span>
             </a>
          </td>
       </tr>

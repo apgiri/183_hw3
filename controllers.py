@@ -35,6 +35,7 @@ from py4web.utils.form import Form, FormStyleBulma
 
 url_signer = URLSigner(session)
 
+
 @action('index')
 @action.uses(db, auth.user, 'index.html')
 def index():
@@ -43,7 +44,8 @@ def index():
     # by 1 (this needs to be protected by a signed URL).
     # On top of the table there is a button to insert a new bird.
     rows = db(db.bird.seen_by == get_user_email()).select()
-    return dict(rows=rows)
+    return dict(rows=rows, url_signer=url_signer)
+
 
 @action('add', method=["GET", "POST"])
 @action.uses(db, session, auth.user, 'add.html')
@@ -56,21 +58,26 @@ def add():
     # Either a get or a post but not accpeted with errors
     return dict(form=form)
 
-# this endpoint will be used for urls of the form app/edit/k where k is the product id
+
+# this endpoint will be used for urls of the form /edit/k where k is the bird id
 @action('edit/<bird_id:int>', method=["GET", "POST"])
 @action.uses(db, session, auth.user, 'edit.html')
 def edit(bird_id=None):
-    assert bird_id is not None
+    # assert bird_id is not None
+    if bird_id is None:
+        redirect(URL('index'))
+
     p = db.bird[bird_id]
-    # product not found in the database: people could have forged the  link
+    # bird not found in the database: people could have forged the  link
     if p is None:
         redirect(URL('index'))
     # edit form: has records
-    form = Form(db.bird, record=p, csrf_session=session, deletable=False, formstyle=FormStyleBulma)
+    form = Form(db.bird, csrf_session=session, record=p, deletable=False, formstyle=FormStyleBulma)
     if form.accepted:
-        # update already happened:
         redirect(URL('index'))
+
     return dict(form=form)
+
 
 # This is an example only, to be used as inspiration for your code to increment the bird count.
 # Note that the bird_id parameter ...
@@ -81,3 +88,13 @@ def capitalize(bird_id=None):
     assert bird_id is not None
     bird = db.bird[bird_id]
     db(db.bird.id == bird_id).update(bird_name=bird.bird_name.capitalize())
+
+
+@action('inc/<bird_id:int>')
+@action.uses(db, auth.user, url_signer.verify())
+def inc(bird_id=None):
+    assert bird_id is not None
+    bird = db.bird[bird_id]
+    db(db.bird.id == bird_id).update(bird_count = bird.bird_count+1)
+    # db(db.bird.id == bird_id).delete()
+    redirect(URL('index'))
