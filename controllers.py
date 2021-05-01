@@ -61,15 +61,17 @@ def add():
 
 # this endpoint will be used for urls of the form /edit/k where k is the bird id
 @action('edit/<bird_id:int>', method=["GET", "POST"])
-@action.uses(db, session, auth.user, 'edit.html')
+@action.uses(db, auth.user, url_signer.verify(), 'edit.html')
 def edit(bird_id=None):
     # assert bird_id is not None
     if bird_id is None:
         redirect(URL('index'))
 
     p = db.bird[bird_id]
+
     # bird not found in the database: people could have forged the  link
     if p is None:
+        # or p.seen_by != get_user_email():
         redirect(URL('index'))
     # edit form: has records
     form = Form(db.bird, csrf_session=session, record=p, deletable=False, formstyle=FormStyleBulma)
